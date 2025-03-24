@@ -2,8 +2,8 @@
 Genapi is an API in development which could be utilized to generate a data-driven API with user inputs.
 
 ## TODO
-- Decide on the hosting service for the generated .NET Core API
-- Generate a full .NET API project to Github and confirm it works when publishing to a hosting service
+- Create PoC (Proof of Concept)
+- When Poc is proven to be OK -> Decide next steps
 
 
 ## Generation of Git repo
