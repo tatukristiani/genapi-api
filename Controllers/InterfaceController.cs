@@ -168,9 +168,6 @@ namespace genapi_api.Controllers
                 // Step 5: Add a .gitignore file
                 ProjectCodeGenerator.GenerateGitignore(projectPath);
 
-                // Step 6: Add connection string to appsettings.json
-                ProjectCodeGenerator.AddSqlConnectionStringToAppSettings(projectPath, configurations.Value<string>("connectionString"));
-
                 // Step 6: Create Directory for Models
                 string modelsPath = Path.Combine(projectPath, "Models");
                 Directory.CreateDirectory(modelsPath);
