@@ -6,6 +6,7 @@ Genapi is an API in development which could be utilized to generate a data-drive
 Prerequisites:
 - Github repository needs to be already created and empty
 - Github Credentials need to be provided (Username + PAT)
+
 .NET Web API is generated through Genapi API and the generated code is then pushed to Github
 
 ### Publishing of the generated API (Azure Web Apps)
