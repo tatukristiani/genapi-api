@@ -1,4 +1,5 @@
 ﻿using LibGit2Sharp;
+using Serilog;
 
 namespace genapi_api.VersionControl
 {
@@ -6,19 +7,18 @@ namespace genapi_api.VersionControl
     {
         public static void InitializeGitRepo(string projectPath)
         {
+            Log.Information($"InitializeGitRepo: Initializing Git repository...");
+
             Repository.Init(projectPath); // Initializes a new Git repo
             using var repo = new Repository(projectPath);
-
-            // Stage all files
             Commands.Stage(repo, "*");
-
-            // Commit changes
             Signature author = new Signature("tatukristiani", "tatukristian@gmail.com", DateTimeOffset.Now);
             repo.Commit("Initial commit", author, author);
         }
 
         public static bool PushToGitHub(string projectPath, string remoteUrl, string username, string token)
         {
+            Log.Information($"PushToGitHub: Pushing to Git...");
             try
             {
                 using var repo = new Repository(projectPath);
@@ -42,6 +42,7 @@ namespace genapi_api.VersionControl
             }
             catch (Exception ex)
             {
+                Log.Information($"PushToGitHub: An error occurred. Error: {ex.Message}. Stack: {ex.StackTrace}");
                 return false;
             }
         }

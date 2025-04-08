@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="GeneratedApps\" />
     <Folder Include="logs\" />
   </ItemGroup>
 

@@ -1,7 +1,10 @@
 ﻿using genapi_api.CodeGeneration;
+using genapi_api.CodeGenerators;
+using genapi_api.Data;
+using genapi_api.VersionControl;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using Serilog;
+using static genapi_api.Data.Configurations;
 
 namespace genapi_api.Controllers
 {
@@ -19,142 +22,34 @@ namespace genapi_api.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateInterface()
+        public IActionResult CreateInterface([FromBody] Configurations configurations)
         {
             Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Request received");
-            return CreateInitialInterface() ? Created() : BadRequest();
+            return CreateInitialInterface(configurations) ? Created() : BadRequest();
         }
 
-        private bool CreateInitialInterface()
+        private bool CreateInitialInterface(Configurations configurations)
         {
+            Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Generating API...");
             try
             {
-                JObject configurations = new JObject
-                {
-                    ["connectionString"] = "Server=your-azure-server.database.windows.net;Database=YourDatabaseName;User Id=YourUsername;Password=YourPassword;TrustServerCertificate=True;",
-                    ["models"] = new JArray
-                    {
-                        new JObject
-                        {
-                            ["name"] = "Product",
-                            ["properties"] = new JArray
-                            {
-                                new JObject
-                                {
-                                    ["type"] = "int",
-                                    ["name"] = "Id",
-                                    ["nullable"] = false,
-                                    ["pk"] = true,
-                                    ["fk"] = false,
-                                    ["fkReference"] = "",
-                                    ["maxLength"] = null,
-                                    ["decimalIntegerPart"] = null,
-                                    ["decimalFractionPart"] = null
-                                },
-                                 new JObject
-                                {
-                                    ["type"] = "string",
-                                    ["name"] = "Name",
-                                    ["nullable"] = false,
-                                    ["pk"] = false,
-                                    ["fk"] = false,
-                                    ["fkReference"] = "",
-                                    ["maxLength"] = 100,
-                                    ["decimalIntegerPart"] = null,
-                                    ["decimalFractionPart"] = null
-                                },
-                                 new JObject
-                                {
-                                    ["type"] = "decimal",
-                                    ["name"] = "Price",
-                                    ["nullable"] = false,
-                                    ["pk"] = false,
-                                    ["fk"] = false,
-                                    ["fkReference"] = "",
-                                    ["maxLength"] = null,
-                                    ["decimalIntegerPart"] = 10,
-                                    ["decimalFractionPart"] = 2
-                                }
-                            }
-                        },
-                        new JObject
-                        {
-                            ["name"] = "Order",
-                            ["properties"] = new JArray
-                            {
-                                new JObject
-                                {
-                                    ["type"] = "int",
-                                    ["name"] = "Id",
-                                    ["nullable"] = false,
-                                    ["pk"] = true,
-                                    ["fk"] = false,
-                                    ["fkReference"] = "",
-                                    ["maxLength"] = null,
-                                    ["decimalIntegerPart"] = null,
-                                    ["decimalFractionPart"] = null
-                                },
-                                new JObject
-                                {
-                                    ["type"] = "datetime",
-                                    ["name"] = "OrderDate",
-                                    ["nullable"] = false,
-                                    ["pk"] = false,
-                                    ["fk"] = false,
-                                    ["fkReference"] = "",
-                                    ["maxLength"] = null,
-                                    ["decimalIntegerPart"] = null,
-                                    ["decimalFractionPart"] = null
-                                },
-                                new JObject
-                                {
-                                    ["type"] = "int",
-                                    ["name"] = "ProductId",
-                                    ["nullable"] = false,
-                                    ["pk"] = false,
-                                    ["fk"] = true,
-                                    ["fkReference"] = "Products",
-                                    ["maxLength"] = null,
-                                    ["decimalIntegerPart"] = null,
-                                    ["decimalFractionPart"] = null
-                                },
-                                new JObject
-                                {
-                                    ["type"] = "int",
-                                    ["name"] = "Quantity",
-                                    ["nullable"] = false,
-                                    ["pk"] = false,
-                                    ["fk"] = false,
-                                    ["fkReference"] = "",
-                                    ["maxLength"] = null,
-                                    ["decimalIntegerPart"] = null,
-                                    ["decimalFractionPart"] = null
-                                }
-                            }
-                        }
-                    }
-                };
-
-                Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Initial API creation started...");
+                Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Validating configurations...");
+                // Validate configurations
+                ValidationResult validationResult = configurations.Validate();
+                if (!validationResult.Success) BadRequest($"Invalid configuration. Errors: {validationResult.Error}");
 
                 // Define some required information
                 string projectName = $"Genapi_{Guid.NewGuid()}".Replace("-", "_");
                 string generatedAppsPath = Path.Combine(Directory.GetCurrentDirectory(), "GeneratedApps");
                 string projectPath = Path.Combine(generatedAppsPath, projectName);
-                string gitRemoteUrl = "https://github.com/tatukristiani/testrepo.git"; // Replace this to a dynamic value later!!!
-
-                Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Project name is {projectName}");
-                Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Project path is {projectPath}");
+                string gitRemoteUrl = configurations.GitHubRepository;
 
                 // Step 1: Create a new directory for the project & delete if already exists
                 if (Directory.Exists(projectPath))
                 {
-                    Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Directory {projectPath} EXISTS!");
                     Directory.Delete(projectPath, true);
-                    Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Directory {projectPath} DELETED.");
                 }
                 Directory.CreateDirectory(projectPath);
-                Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Directory {projectPath} CREATED.");
 
                 // Step 2: Create a new .NET Web API project
                 ProjectCodeGenerator.GenerateDefaultWebAPI(projectName, generatedAppsPath);
@@ -173,18 +68,23 @@ namespace genapi_api.Controllers
                 Directory.CreateDirectory(modelsPath);
 
                 // Step 7: Create Model classes
-                ModelCodeGenerator.GenerateModels(configurations.Value<JArray>("models"), modelsPath, projectName);
+                ModelCodeGenerator.GenerateModels(configurations.Resources, modelsPath, projectName);
 
-                // Step 8: Create DbContext
+                // Step 8: Create Directory for Data + DbContext class
+                string dataPath = Path.Combine(projectPath, "Data");
+                Directory.CreateDirectory(dataPath);
+                ProjectCodeGenerator.GenerateApplicationDbContext(configurations.Resources, projectName, dataPath);
 
-                // Step 9: Initialize Git
-                /*
+                // Step 9: Create Directory for Controllers & Controller classes
+                string controllerPath = Path.Combine(projectPath, "Controllers");
+                Directory.CreateDirectory(controllerPath);
+                ControllerCodeGenerator.GenerateControllers(configurations.Resources.Select(r => r.Name).ToList(), projectName, controllerPath);
+
+                // Step 10: Initialize Git
                 GithubService.InitializeGitRepo(projectPath);
 
-                // Step 10: Push to Git
-                return GithubService.PushToGitHub(projectPath, gitRemoteUrl, _config["GITHUB_USERNAME"], _config["GITHUB_TOKEN"]); // Replace credentials to use values from the request instead of .env
-            */
-                return true;
+                // Step 11: Push to Git
+                return GithubService.PushToGitHub(projectPath, gitRemoteUrl, configurations.GitHubUser, configurations.GitHubPersonalAccessToken);
             }
             catch (Exception ex)
             {
