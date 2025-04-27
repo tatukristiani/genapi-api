@@ -29,12 +29,12 @@ Note! Modification of Models or Database columns might bring some difficulties.
 ### Genapi API
 - Add validations to input configurations when UI is ready
 - Support for other databases ready (only need to implement them)
-- Clean out old generators
 
 ### Genapi UI
 1. Create Genapi UI simple version
 2. Add more customization options
-1. 
+
+
 ### Documentation
 Later on...
 
