@@ -2,10 +2,11 @@
 {
     public class Configurations
     {
-        public string GitHubRepository { get; set; } = String.Empty;
-        public string GitHubUser { get; set; } = String.Empty;
-        public string GitHubPersonalAccessToken { get; set; } = String.Empty;
-        public List<Resource> Resources { get; set; }
+        public required string ApiName { get; set; }
+        public required string GitHubRepository { get; set; }
+        public required string GitHubUser { get; set; }
+        public required string GitHubPersonalAccessToken { get; set; }
+        public required List<Resource> Resources { get; set; }
 
         // TODO: Add validation
         public ValidationResult Validate()

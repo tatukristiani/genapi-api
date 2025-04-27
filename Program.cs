@@ -30,6 +30,9 @@ namespace genapi_api
 
             var app = builder.Build();
 
+            app.UseRouting();
+            app.UseCors();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
