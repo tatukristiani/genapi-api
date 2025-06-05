@@ -486,3 +486,4 @@ $RECYCLE.BIN/
 # Additional ones
 logs/
 GeneratedApps/
+appsettings.Secret.json

@@ -1,8 +1,8 @@
-﻿using genapi_api.Data;
-using genapi_api.Services;
+﻿using genapi_api.Data.GeneratorData;
+using genapi_api.Services.GeneratorServices;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
-using static genapi_api.Data.Configurations;
+using static genapi_api.Data.GeneratorData.Configurations;
 
 namespace genapi_api.Controllers
 {
@@ -20,6 +20,8 @@ namespace genapi_api.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(400)]
         public IActionResult CreateInterface([FromBody] Configurations configurations)
         {
             Log.Information($"{HttpContext.GetEndpoint()?.DisplayName}: Request received");

@@ -1,5 +1,7 @@
-using genapi_api.Utilities;
+using genapi_api.Data.GenapiData;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Reflection;
 
 namespace genapi_api
 {
@@ -7,14 +9,10 @@ namespace genapi_api
     {
         public static void Main(string[] args)
         {
-            // Load .env
-            var root = Directory.GetCurrentDirectory();
-            var dotenv = Path.Combine(root, ".env");
-            DotEnv.Load(dotenv);
-
-            var config = new ConfigurationBuilder().AddEnvironmentVariables().Build();
-
             var builder = WebApplication.CreateBuilder(args);
+            builder.Configuration
+                .AddJsonFile("appsettings.Secret.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables();
 
             // Add services to the container.
             builder.Services.AddControllers();
@@ -27,6 +25,15 @@ namespace genapi_api
                     policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
                 });
             });
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                var conn = builder.Configuration.GetConnectionString("GENAPI_DATABASE");
+                options.UseSqlServer(conn);
+            });
+
+            builder.Services.AddScoped<IDatabaseAgent, DatabaseAgent>();
+            builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             var app = builder.Build();
 
@@ -51,6 +58,13 @@ namespace genapi_api
             .WriteTo.Console()
             .WriteTo.File("logs/genapi-logs.txt", rollingInterval: RollingInterval.Day, outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
+
+            // Apply pending migrations and create database
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                db.Database.Migrate(); // This ensures the database is created and up to date
+            }
 
             app.Run();
         }
