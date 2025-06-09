@@ -6,12 +6,19 @@ namespace genapi_api.Data.GenapiData
     {
         // User Entity methods
         Task<User?> GetUserByUsername(string username);
-        Task<User?> GetUserById(int id);
+        Task<User?> GetUserById(Guid id);
         bool UserExists(string username, string email);
 
         // Organization Entity methods
-        Task<Organization?> GetOrganizationById(int id);
+        Task<Organization?> GetOrganizationById(Guid id);
         Task<bool> OrganizationExists(string name);
+
+        // ApiKey entity methods
+        Task<ApiKey?> GetValidApiKey(Guid apiKeyValue);
+        Task<ICollection<ApiKey>> GetApiKeys();
+
+        // ApiKeyUsage entity methods
+        Task<ApiKeyUsage?> GetApiKeyUsage(Guid apiKeyId);
 
         // Shared methods
         Task<bool> AddEntity(object entity);

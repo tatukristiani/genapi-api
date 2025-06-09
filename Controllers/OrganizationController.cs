@@ -25,8 +25,38 @@ namespace genapi_api.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetOrganizationById([FromRoute] int id)
+        public async Task<IActionResult> GetOrganizationById([FromRoute] Guid id, [FromHeader(Name = "X-Api-Key")] string apiKeyValue)
         {
+            if (string.IsNullOrWhiteSpace(apiKeyValue))
+                return Unauthorized("API key is missing.");
+
+            ApiKey? apiKey = await _agent.GetValidApiKey(Guid.Parse(apiKeyValue));
+
+            if (apiKey == null)
+                return Unauthorized("Invalid or expired API key.");
+
+            var usage = await _agent.GetApiKeyUsage(apiKey.Id);
+
+
+            if (usage != null && usage.RequestCount >= apiKey.DailyLimit)
+                return StatusCode(429, "Daily API limit exceeded.");
+
+            if (usage == null)
+            {
+                usage = new ApiKeyUsage
+                {
+                    ApiKeyId = apiKey.Id,
+                    Date = DateTime.UtcNow.Date,
+                    RequestCount = 1
+                };
+                await _agent.AddEntity(usage);
+            }
+            else
+            {
+                usage.RequestCount++;
+                await _agent.UpdateEntity(usage);
+            }
+
             var org = await _agent.GetOrganizationById(id);
             if (org == null) return NotFound();
             return Ok(_mapper.Map<OrganizationDTO>(org));
@@ -49,6 +79,7 @@ namespace genapi_api.Controllers
             var newOrg = new Organization();
             newOrg.Name = org.Name;
             newOrg.Created = DateTime.UtcNow;
+            newOrg.Id = Guid.NewGuid();
             var editors = new List<User>();
             var users = new List<User>();
 
@@ -76,15 +107,5 @@ namespace genapi_api.Controllers
 
             return result ? CreatedAtAction(nameof(GetOrganizationById), new { id = newOrg.Id }, _mapper.Map<OrganizationDTO>(newOrg)) : StatusCode(500);
         }
-
-        /*
-        [HttpPut]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        public async Task<IActionResult> UpdateOrganization([FromBody] Organization org)
-        {
-            return await _agent.UpdateEntity(org) ? Ok() : BadRequest();
-        }
-        */
     }
 }

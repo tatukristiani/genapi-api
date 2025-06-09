@@ -4,7 +4,8 @@ namespace genapi_api.Data.GenapiData.Entities
 {
     public class User
     {
-        public int Id { get; set; }
+        [Key]
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         [MaxLength(50)]

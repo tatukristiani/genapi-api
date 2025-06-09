@@ -2,7 +2,7 @@
 {
     public class UserDTO
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
         public string Username { get; set; }
         public string Email { get; set; }
         public ICollection<string> Organizations { get; set; } = new List<string>();

@@ -10,6 +10,8 @@ namespace genapi_api.Data.GenapiData
 
         public DbSet<User> Users { get; set; }
         public DbSet<Organization> Organizations { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
+        public DbSet<ApiKeyUsage> ApiKeyUsages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -48,6 +50,10 @@ namespace genapi_api.Data.GenapiData
                         j.HasKey("OrganizationId", "UserId");
                         j.ToTable("OrganizationEditors");
                     });
+
+            modelBuilder.Entity<ApiKeyUsage>()
+                .HasIndex(u => new { u.ApiKeyId, u.Date })
+                .IsUnique(); // Only one usage record per key per day
         }
     }
 }

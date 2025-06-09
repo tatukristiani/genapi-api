@@ -56,6 +56,17 @@ namespace genapi_api.Data.GenapiData
                            opt => opt.Ignore())
                 .ForMember(dest => dest.Editors,
                            opt => opt.Ignore());
+
+            // DTO → Entity
+            CreateMap<ApiKeyDTO, ApiKey>()
+                .ForMember(dest => dest.Id,
+                           opt => opt.Ignore())
+                .ForMember(dest => dest.Key,
+                           opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt,
+                           opt => opt.Ignore())
+                .ForMember(dest => dest.IsActive,
+                           opt => opt.Ignore());
         }
     }
 }

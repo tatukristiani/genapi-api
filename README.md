@@ -27,14 +27,18 @@ Note! Modification of Models or Database columns might bring some difficulties.
 
 ## Next items to work on
 ### Genapi API
-- Add API key table to DB + endpoints to test how API key works (genapi) (max requests per min + max requests per month)
-- Add API key tables + endpoint (generated api) (max requests per min + max requests per month)
-- Modify genapi to fetch API keys from generated API DB + Generated APIs from genapi DB
-- Add validations to input configurations
+- Add DB tables for generated APIs. Add DB insert, delete and get operations to InterfaceController
+- Add status check endpoint to generated API
+- Add required code for generated API to use API key as authentication. Genapi API will handle management of API keys
+- Add improved logging onto some external software
+- Add unit tests
+- Add more detailed comments
 
 ### Genapi UI
-1. Add database to backend so that UI can show generated APIs + add status check url so UI knows if API is online
-2. After that is working start working on the backend again
+- Add view for register/login + forgot password
+- Add view for API management for generated APIs + API keys + API online/offline status
+- Add documentation page
+- Add Q&A page
 
 
 ### Documentation

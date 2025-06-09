@@ -19,11 +19,21 @@ namespace genapi_api.Data.GenapiData
         public async Task<bool> AddEntity(object entity)
         {
             _context.Add(entity);
-            int result = await _context.SaveChangesAsync();
-            return result > 0;
+            return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<Organization?> GetOrganizationById(int id)
+        public async Task<ICollection<ApiKey>> GetApiKeys()
+        {
+            return await _context.ApiKeys.ToListAsync();
+        }
+
+        public async Task<ApiKeyUsage?> GetApiKeyUsage(Guid apiKeyId)
+        {
+            return await _context.ApiKeyUsages
+                .FirstOrDefaultAsync(u => u.ApiKeyId == apiKeyId && u.Date == DateTime.UtcNow.Date);
+        }
+
+        public async Task<Organization?> GetOrganizationById(Guid id)
         {
             return await _context.Organizations
                 .Include(o => o.Users)
@@ -31,7 +41,7 @@ namespace genapi_api.Data.GenapiData
                 .FirstOrDefaultAsync(o => o.Id == id);
         }
 
-        public async Task<User?> GetUserById(int id)
+        public async Task<User?> GetUserById(Guid id)
         {
             return await _context.Users
                 .Include(o => o.Organizations)
@@ -47,6 +57,12 @@ namespace genapi_api.Data.GenapiData
                 .FirstOrDefaultAsync(x => x.Username == username);
         }
 
+        public async Task<ApiKey?> GetValidApiKey(Guid apiKeyValue)
+        {
+            return await _context.ApiKeys
+                .FirstOrDefaultAsync(k => k.Key == apiKeyValue && k.IsActive && (k.ExpiresAt == null || k.ExpiresAt > DateTime.UtcNow));
+        }
+
         public async Task<bool> OrganizationExists(string name)
         {
             if (_context.Organizations == null) return false;
@@ -54,11 +70,16 @@ namespace genapi_api.Data.GenapiData
             return await _context.Organizations.AnyAsync(e => e.Name == name);
         }
 
+        public async Task<bool> UpdateApiKeyUsageCount(ApiKeyUsage usage)
+        {
+            _context.Update(usage);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
         public async Task<bool> UpdateEntity(object entity)
         {
             _context.Update(entity);
-            int result = await _context.SaveChangesAsync();
-            return result > 0;
+            return await _context.SaveChangesAsync() > 0;
         }
 
         public bool UserExists(string username, string email)

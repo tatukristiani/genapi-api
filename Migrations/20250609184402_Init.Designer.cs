@@ -12,8 +12,8 @@ using genapi_api.Data.GenapiData;
 namespace genapi_api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250605211850_OrganizationUpdates")]
-    partial class OrganizationUpdates
+    [Migration("20250609184402_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,11 @@ namespace genapi_api.Migrations
 
             modelBuilder.Entity("OrganizationEditor", b =>
                 {
-                    b.Property<int>("OrganizationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("OrganizationId", "UserId");
 
@@ -42,11 +42,11 @@ namespace genapi_api.Migrations
 
             modelBuilder.Entity("OrganizationUser", b =>
                 {
-                    b.Property<int>("OrganizationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("OrganizationId", "UserId");
 
@@ -55,13 +55,68 @@ namespace genapi_api.Migrations
                     b.ToTable("OrganizationUsers", (string)null);
                 });
 
-            modelBuilder.Entity("genapi_api.Data.GenapiData.Entities.Organization", b =>
+            modelBuilder.Entity("genapi_api.Data.GenapiData.Entities.ApiKey", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DailyLimit")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("Key")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ApiKeys");
+                });
+
+            modelBuilder.Entity("genapi_api.Data.GenapiData.Entities.ApiKeyUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ApiKeyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RequestCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKeyId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("ApiKeyUsages");
+                });
+
+            modelBuilder.Entity("genapi_api.Data.GenapiData.Entities.Organization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
@@ -78,11 +133,9 @@ namespace genapi_api.Migrations
 
             modelBuilder.Entity("genapi_api.Data.GenapiData.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
@@ -144,6 +197,17 @@ namespace genapi_api.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("genapi_api.Data.GenapiData.Entities.ApiKeyUsage", b =>
+                {
+                    b.HasOne("genapi_api.Data.GenapiData.Entities.ApiKey", "ApiKey")
+                        .WithMany()
+                        .HasForeignKey("ApiKeyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApiKey");
                 });
 #pragma warning restore 612, 618
         }

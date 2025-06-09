@@ -37,7 +37,7 @@ namespace genapi_api.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
-        public async Task<IActionResult> GetUserById([FromRoute] int id)
+        public async Task<IActionResult> GetUserById([FromRoute] Guid id)
         {
             var user = await _agent.GetUserById(id);
             if (user == null) return NotFound();
@@ -55,12 +55,13 @@ namespace genapi_api.Controllers
                 return BadRequest($"Failed to create user.");
             }
 
-            // Craeate User entity
+            // Create User entity
             using var hmac = new System.Security.Cryptography.HMACSHA512();
             User newUser = _mapper.Map<User>(user);
             newUser.PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(user.Password));
             newUser.PasswordSalt = hmac.Key;
             newUser.Created = DateTime.UtcNow;
+            newUser.Id = Guid.NewGuid();
 
             var result = await _agent.AddEntity(newUser);
 
